@@ -1,0 +1,23 @@
+variables:
+  DOCKER_HOST: unix:///var/run/docker.sock
+  DOCKER_DRIVER: overlay2
+
+image:
+  name: docker:latest
+
+stages:
+  - test
+
+test_bot:
+  stage: test
+  tags:
+    - test
+  script:
+    - cat $CONFIG_FILE > src/config.yaml
+    - cat $TEST_ENV_FILE > tests/test.env
+    - chmod 777 tests
+    - docker compose -f docker-compose.test.yaml build
+    - docker compose -f docker-compose.test.yaml run test
+  after_script:
+    - docker compose -f docker-compose.test.yaml stop
+    - sudo setfacl -R -m u:gitlab-runner:rwx /home/gitlab-runner/
